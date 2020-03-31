@@ -4,7 +4,10 @@
 TcpServer::TcpServer(QObject *parent,int numConnections) :
     QTcpServer(parent)
 {
+    // 最大连接数默认10000
+    // 创建Socket容器
      tcpClient = new  QHash<int,TcpSocket *>;
+     // 设置tcp最大连接数
      setMaxPendingConnections(numConnections);
 }
 
@@ -14,6 +17,7 @@ TcpServer::~TcpServer()
     delete tcpClient;
 }
 
+// 重写设置最大连接数函数
 void TcpServer::setMaxPendingConnections(int numConnections)
 {
     this->QTcpServer::setMaxPendingConnections(numConnections);//调用Qtcpsocket函数，设置最大连接数，主要是使maxPendingConnections()依然有效
@@ -42,6 +46,7 @@ void TcpServer::incomingConnection(qintptr socketDescriptor) //多线程必须�
     emit connectClient(socketDescriptor,ip,port);
 }
 
+// 断开连接的用户信息
 void TcpServer::sockDisConnectSlot(int handle,const QString & ip, quint16 prot,QThread * th)
 {
     tcpClient->remove(handle);//连接管理中移除断开连接的socket

@@ -5,6 +5,7 @@
 #include <QDir>
 #include <QTextStream>
 #include <iostream>
+#include <QThread>
 #ifndef Q_OS_WIN
 #include "eventdispatcher_libev/eventdispatcher_libev.h"
 #endif
@@ -50,9 +51,33 @@ int main(int argc, char *argv[])
     QCoreApplication::setEventDispatcher(new EventDispatcherLibEv());
 #endif
     QCoreApplication a(argc, argv);
-    std::cout << "???" << std::endl;
+    qDebug() << QThread::currentThread() << "程序启动" ;
     TcpServer ser;
-    ser.listen(QHostAddress::Any,6666);
+    if(ser.listen(QHostAddress::Any,6666)) {
+        qDebug() << QThread::currentThread() << "Liston Port 6666 Success";
+    }
+    else {
+        qDebug() << QThread::currentThread() << "Liston Port 6666 Error";
+    }
+
+    // 新用户连接
+    QObject::connect(&ser, &TcpServer::connectClient,
+                     [&](const int id, const QString & addr, const quint16 port)//发送新用户连接信息
+    {
+        qDebug() << QThread::currentThread() << id << addr << port;
+    });
+    // 获得用户发过来的数据
+    QObject::connect(&ser, &TcpServer::readData,
+                     [&](const int id ,const QString &addr , quint16 port, const QByteArray &data)//发送获得用户发过来的数据
+    {
+        qDebug() << QThread::currentThread() << id << addr << port << data;
+    });
+    // 断开连接的用户信息
+    QObject::connect(&ser, &TcpServer::sockDisConnect,
+                     [&](const int id ,const QString &addr , quint16 port)// 断开连接的用户信息
+    {
+        qDebug() << QThread::currentThread() << id << addr << port;
+    });
 
     return a.exec();
 }

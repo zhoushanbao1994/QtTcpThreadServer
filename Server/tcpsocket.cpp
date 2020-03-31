@@ -10,13 +10,13 @@ TcpSocket::TcpSocket(qintptr socketDescriptor, QObject *parent) : //构造函数
     connect(this,&TcpSocket::readyRead,this,&TcpSocket::readData);
     dis = connect(this,&TcpSocket::disconnected,
         [&](){
-            qDebug() << "disconnect" ;
+            qDebug() << QThread::currentThread() << QThread::currentThreadId() << this->peerAddress().toString() << this->peerPort() << "disconnect" ;
             emit sockDisConnect(socketID,this->peerAddress().toString(),this->peerPort(),QThread::currentThread());//发送断开连接的用户信息
             this->deleteLater();
         });
     connect(&watcher,&QFutureWatcher<QByteArray>::finished,this,&TcpSocket::startNext);
     connect(&watcher,&QFutureWatcher<QByteArray>::canceled,this,&TcpSocket::startNext);
-    qDebug() << "new connect" ;
+    qDebug() << QThread::currentThread() << QThread::currentThreadId() << this->peerAddress().toString() << this->peerPort() << "new connect";
 }
 
 TcpSocket::~TcpSocket()
@@ -50,7 +50,7 @@ void TcpSocket::readData()
 {
 //    datas.append(this->readAll());
     auto data  = handleData(this->readAll(),this->peerAddress().toString(),this->peerPort());
-    qDebug() << data;
+    qDebug() << __FUNCTION__  << __LINE__ << data;
     this->write(data);
 //    if (!watcher.isRunning())//放到异步线程中处理。
 //    {
@@ -60,6 +60,7 @@ void TcpSocket::readData()
 
 QByteArray TcpSocket::handleData(QByteArray data, const QString &ip, qint16 port)
 {
+    qDebug() << QThread::currentThread() << QThread::currentThreadId() << this->peerAddress().toString() << this->peerPort();
     QTime time;
     time.start();
 
@@ -67,7 +68,7 @@ QByteArray TcpSocket::handleData(QByteArray data, const QString &ip, qint16 port
     tm.start();
     while(tm.elapsed() < 100)
     {}
-    data = ip.toUtf8() + " " + QByteArray::number(port) + " " + data + " " + QTime::currentTime().toString().toUtf8();
+    data = "IP:" + ip.toUtf8() + ", Port:" + QByteArray::number(port) + ", Data:" + data + ", Time:" + QTime::currentTime().toString().toUtf8();
     return data;
 }
 

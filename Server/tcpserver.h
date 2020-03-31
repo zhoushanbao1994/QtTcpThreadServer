@@ -31,8 +31,8 @@ protected slots:
 protected:
     void incomingConnection(qintptr socketDescriptor);//覆盖已获取多线程
 private:
-    QHash<int,TcpSocket *> * tcpClient;//管理连接的map
-    int maxConnections;
+    QHash<int,TcpSocket *> * tcpClient;//管理连接的map，TcpSocket容器
+    int maxConnections;             // 最大连接数
 
 };
 
