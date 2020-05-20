@@ -15,24 +15,28 @@ class TcpSocket : public QTcpSocket
 public:
     explicit TcpSocket(qintptr socketDescriptor, QObject *parent = 0);
     ~TcpSocket();
-    QByteArray handleData(QByteArray data,const QString & ip, qint16 port);//用来处理数据的函数
+
+    // 用来处理数据的函数
+    //QByteArray handleData(QByteArray data,const QHostAddress & ip, qint16 port);
 
 signals:
-    //void readData(const int,const QString &,const quint16,const QByteArray &);
-    void sockDisConnect(const int ,const QString &,const quint16, QThread *);//NOTE:断开连接的用户信息，此信号必须发出！线程管理类根据信号计数的
+    void readData_signal(const qintptr socketDescriptor, const QHostAddress &, const quint16,const QByteArray &);
+    //NOTE:断开连接的用户信息，此信号必须发出！线程管理类根据信号计数的
+    void sockDisConnect(const qintptr socketDescriptor, const QHostAddress &,const quint16, QThread *);
 public slots:
-    void sentData(const QByteArray & ,const int);//发送信号的槽
-    void disConTcp(int i);
+    //发送信号的槽
+    void sentDataSlot(const qintptr socketDescriptor, const QByteArray &);
+    // 断开连接
+    void disConTcp(const qintptr socketDescriptor);
 
 protected slots:
-    void readData();//接收数据
-    void startNext();//处理下一个
+    void readData_slot();//接收数据
+
 protected:
-    QFutureWatcher<QByteArray> watcher;
-    QQueue<QByteArray> datas;
+    QQueue<QByteArray> m_datas;             // 提供队列的通用容器
 private:
-    qintptr socketID;
-    QMetaObject::Connection dis;
+    qintptr m_socketID;                     // 套接字描述符
+    QMetaObject::Connection m_dis;          // 信号与槽的连接状态，连接时赋值，断开时根据值断开
 };
 
 #endif // TCPSOCKET_H

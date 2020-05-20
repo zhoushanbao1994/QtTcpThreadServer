@@ -52,8 +52,10 @@ int main(int argc, char *argv[])
 #endif
     QCoreApplication a(argc, argv);
     qDebug() << QThread::currentThread() << "程序启动" ;
-    TcpServer ser;
-    if(ser.listen(QHostAddress::Any,6666)) {
+
+    TcpServer *server = new TcpServer();
+    // 监听所有地址的6666端口
+    if(server->listen(QHostAddress::Any, 6666)) {
         qDebug() << QThread::currentThread() << "Liston Port 6666 Success";
     }
     else {
@@ -61,20 +63,23 @@ int main(int argc, char *argv[])
     }
 
     // 新用户连接
-    QObject::connect(&ser, &TcpServer::connectClient,
-                     [&](const int id, const QString & addr, const quint16 port)//发送新用户连接信息
+    QObject::connect(server, &TcpServer::connectClientSignal,
+                     [&](const int id, const QHostAddress & addr, const quint16 port)//发送新用户连接信息
     {
-        qDebug() << QThread::currentThread() << id << addr << port;
+        qDebug() << QThread::currentThread() << "新用户连接：" << id << addr << port;
+        QByteArray data = "hello";
+        emit server->sendDataSignal(id, data);
     });
     // 获得用户发过来的数据
-    QObject::connect(&ser, &TcpServer::readData,
-                     [&](const int id ,const QString &addr , quint16 port, const QByteArray &data)//发送获得用户发过来的数据
+    QObject::connect(server, &TcpServer::readDataSignal,
+                     [&](const int id, const QHostAddress &addr, quint16 port, const QByteArray &data)//发送获得用户发过来的数据
     {
         qDebug() << QThread::currentThread() << id << addr << port << data;
+        emit server->sendDataSignal(id, data);
     });
     // 断开连接的用户信息
-    QObject::connect(&ser, &TcpServer::sockDisConnect,
-                     [&](const int id ,const QString &addr , quint16 port)// 断开连接的用户信息
+    QObject::connect(server, &TcpServer::sockDisConnectSignal,
+                     [&](const int id ,const QHostAddress &addr , quint16 port)// 断开连接的用户信息
     {
         qDebug() << QThread::currentThread() << id << addr << port;
     });
